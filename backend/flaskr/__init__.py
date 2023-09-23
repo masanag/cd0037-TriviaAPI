@@ -43,7 +43,7 @@ def create_app(test_config=None):
     @app.route('/categories', methods=['GET'])
     def retrieve_categories():
         categories = Category.query.all()
-        formatted_categories = [category.format() for category in categories]
+        formatted_categories = {category.id: category.type for category in categories}
         return jsonify({
             'success': True,
             'categories': formatted_categories
@@ -65,6 +65,7 @@ def create_app(test_config=None):
     def retrieve_questions():
         selection = Question.query.order_by(Question.id).all()
         current_questions = paginate_questions(request, selection)
+        categories = {category.id: category.type for category in Category.query.order_by(Category.id).all()} if Category.query.count() > 0 else []
 
         if(len(current_questions) == 0):
             abort(404)
@@ -72,7 +73,8 @@ def create_app(test_config=None):
         return jsonify({
             'success': True,
             'questions': current_questions,
-            'total_questions': len(Question.query.all())
+            'total_questions': len(Question.query.all()),
+            'categories': categories,
         })
     """
     @TODO:
@@ -169,12 +171,7 @@ def create_app(test_config=None):
             new_question = body.get('question', None)
             new_answer = body.get('answer', None)
             new_category = body.get("category", None)
-            new_difficulty = body.get("difficulty", 1)
-
-            if not isinstance(new_difficulty, int):
-                abort(422, description="difficulty must be an integer")
-            if not isinstance(new_category, str):
-                abort(422, description="category must be a string")
+            new_difficulty = body.get("difficulty", '1')
 
             question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
             question.insert()
@@ -201,13 +198,13 @@ def create_app(test_config=None):
     @app.route('/quizzes', methods=['POST'])
     def play_quiz():
         body = request.get_json()
-        previous_quiz_ids = body.get('previous_question', [])
+        previous_quiz_ids = body.get('previous_questions', [])
         category = body.get('quiz_category', None)
 
         filters = []
         if previous_quiz_ids:
             filters.append(Question.id.notin_(previous_quiz_ids))
-        if category:
+        if category and category['id'] != 0:
             filters.append(Question.category == category['id'])
 
         questions = Question.query.filter(*filters).all()

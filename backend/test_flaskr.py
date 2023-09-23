@@ -32,8 +32,8 @@ class TriviaTestCase(unittest.TestCase):
     def test_retrieve_categories(self):
         res = self.client().get('/categories')
         data = json.loads(res.data)
-
         self.assertEqual(len(data['categories']), 6)
+        self.assertEqual(data['categories']['1'], 'Science')
 
     def test_retrieve_paginated_questions(self):
         res = self.client().get('/questions?page=1')
@@ -41,6 +41,8 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(data['success'], True)
         self.assertEqual(len(data['questions']), 10)
+        self.assertEqual(data['total_questions'], 19)
+        self.assertEqual(len(data['categories']), 6)
 
     def test_retrieve_questions_by_category(self):
         res = self.client().get('/categories/1/questions')
@@ -101,7 +103,7 @@ class TriviaTestCase(unittest.TestCase):
         res = self.client().post('/questions', json={
             'question': 'What is the capital of the USA?',
             'answer': 'Washington DC',
-            'category': 3,
+            'category': 'Art',
             'difficulty': 1
         })
         data = json.loads(res.data)
