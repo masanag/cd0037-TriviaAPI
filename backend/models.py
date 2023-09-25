@@ -3,8 +3,9 @@ from sqlalchemy import Column, String, Integer, create_engine
 from flask_sqlalchemy import SQLAlchemy
 import json
 
-database_name = 'trivia'
-database_path = 'postgresql://{}/{}'.format('localhost:5432', database_name)
+# MEMO: Following the instructions, I utilized environment variables. The code, when not using environment variables, would be as follows:
+# database_path = 'postgresql://{}/{}'.format('localhost:5432', database_name)
+database_path = os.environ.get('DATABASE_URL')
 
 db = SQLAlchemy()
 
