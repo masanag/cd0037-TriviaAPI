@@ -1,4 +1,5 @@
 # API Development and Documentation Final Project
+# TODO: check readme, including backend/ and frontend/
 
 ## Trivia App
 

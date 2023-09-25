@@ -70,6 +70,7 @@ def create_app(test_config=None):
         if(len(current_questions) == 0):
             abort(404)
 
+        # TODO: return current category, but not sure what that means
         return jsonify({
             'success': True,
             'questions': current_questions,
@@ -96,6 +97,7 @@ def create_app(test_config=None):
         if(len(current_questions) == 0):
             abort(404)
 
+        # TODO: return categories
         return jsonify({
             'success': True,
             'questions': current_questions,
@@ -137,6 +139,7 @@ def create_app(test_config=None):
     of the questions list in the "List" tab.
     """
     @app.route('/questions', methods=['POST'])
+    # TODO: Create POST endpoint to get questions based on category
     def post_question():
         body = request.get_json()
         search = body.get('searchTerm', None)
