@@ -93,16 +93,17 @@ def create_app(test_config=None):
 
         selection = Question.query.order_by(Question.id).filter(Question.category == category_id).all()
         current_questions = paginate_questions(request, selection)
+        categories = {category.id: category.type for category in Category.query.order_by(Category.id).all()} if Category.query.count() > 0 else []
 
         if(len(current_questions) == 0):
             abort(404)
 
-        # TODO: return categories
         return jsonify({
             'success': True,
             'questions': current_questions,
             'total_questions': len(Question.query.all()),
-            'current_category': category.type
+            'current_category': category.type,
+            'categories': categories,
         })
 
     """
