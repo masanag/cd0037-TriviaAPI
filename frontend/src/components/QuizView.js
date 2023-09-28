@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import $ from 'jquery';
 import '../stylesheets/QuizView.css';
 
-const questionsPerPlay = 5;
-
 class QuizView extends Component {
   constructor(props) {
     super();
@@ -16,6 +14,7 @@ class QuizView extends Component {
       currentQuestion: {},
       guess: '',
       forceEnd: false,
+      questionsPerPlay: 0,
     };
   }
 
@@ -35,7 +34,18 @@ class QuizView extends Component {
   }
 
   selectCategory = ({ type, id = 0 }) => {
-    this.setState({ quizCategory: { type, id } }, this.getNextQuestion);
+    $.ajax({
+      url: `/categories`, //TODO: update request URL
+      type: 'GET',
+      success: (result) => {
+        this.setState({ questionsPerPlay: id === 0 ? result.total_questions : result.total_questions_by_category[id], quizCategory: { type, id } }, this.getNextQuestion);
+        return;
+      },
+      error: (error) => {
+        alert('Unable to load categories. Please try your request again');
+        return;
+      },
+    });
   };
 
   handleChange = (event) => {
@@ -46,6 +56,10 @@ class QuizView extends Component {
     const previousQuestions = [...this.state.previousQuestions];
     if (this.state.currentQuestion.id) {
       previousQuestions.push(this.state.currentQuestion.id);
+    }
+    if(previousQuestions.length === this.state.questionsPerPlay) {
+      this.setState({previousQuestions: previousQuestions}, this.renderPlay)
+      return;
     }
 
     $.ajax({
@@ -170,7 +184,7 @@ class QuizView extends Component {
   }
 
   renderPlay() {
-    return this.state.previousQuestions.length === questionsPerPlay ||
+    return this.state.previousQuestions.length === this.state.questionsPerPlay ||
       this.state.forceEnd ? (
       this.renderFinalScore()
     ) : this.state.showAnswer ? (

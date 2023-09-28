@@ -44,9 +44,12 @@ def create_app(test_config=None):
     def retrieve_categories():
         categories = Category.query.all()
         formatted_categories = {category.id: category.type for category in categories}
+        questions_by_category = {category.id: len(Question.query.filter(Question.category == category.id).all()) for category in categories}
         return jsonify({
             'success': True,
-            'categories': formatted_categories
+            'categories': formatted_categories,
+            'total_questions': len(Question.query.all()),
+            'total_questions_by_category': questions_by_category,
         })
 
     """
@@ -235,7 +238,7 @@ def create_app(test_config=None):
         }), 404
 
     @app.errorhandler(422)
-    def not_found(error):
+    def unprocessable_entity(error):
         return jsonify({
             'success': False,
             'error': 422,
