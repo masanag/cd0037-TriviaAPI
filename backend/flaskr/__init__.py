@@ -141,6 +141,7 @@ def create_app(test_config=None):
     """
     @app.route('/questions', methods=['POST'])
     # TODO: Create POST endpoint to get questions based on category
+    # But a GET endpoint has been created with the same functionality at /categories/<int:category_id>/questions.
     def post_question():
         body = request.get_json()
         search = body.get('searchTerm', None)
