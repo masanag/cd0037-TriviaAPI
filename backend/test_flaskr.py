@@ -90,6 +90,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'resource not found')
         self.assertEqual(data['error'], 404)
 
+    # MEMO: This test case is designed to be run in isolation, with the database initialized before execution.
     # def test_create_question(self):
     #     res = self.client().post('/questions', json={
     #         'question': 'What is the capital of the USA?',
@@ -101,10 +102,27 @@ class TriviaTestCase(unittest.TestCase):
     #     self.assertEqual(data['success'], True)
     #     self.assertTrue(data['created'])
 
+    def test_error_create_questions(self):
+        res = self.client().post('/questions', json={
+            'category': 100,
+        })
+        data = json.loads(res.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'unprocessable')
+        self.assertEqual(data['error'], 422)
+
+    # MEMO: This test case is designed to be run in isolation, with the database initialized before execution.
     # def test_delete_question(self):
-    #     res = self.client().delete('/questions/1')
+    #     res = self.client().delete('/questions/5')
     #     data = json.loads(res.data)
     #     self.assertEqual(data['success'], True)
+
+    def test_error_delete_question(self):
+        res = self.client().delete('/questions/500')
+        data = json.loads(res.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['error'], 404)
 
     # Create a POST endpoint to get questions to play the quiz.
     # This endpoint should take category and previous question parameters
