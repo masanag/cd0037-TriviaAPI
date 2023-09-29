@@ -43,6 +43,9 @@ def create_app(test_config=None):
     @app.route('/categories', methods=['GET'])
     def retrieve_categories():
         categories = Category.query.all()
+        if(len(categories) == 0):
+            abort(404)
+
         formatted_categories = {category.id: category.type for category in categories}
         questions_by_category = {category.id: len(Question.query.filter(Question.category == category.id).all()) for category in categories}
         return jsonify({
@@ -164,6 +167,8 @@ def create_app(test_config=None):
     """
     def search_questions(search):
         selection = Question.query.order_by(Question.id).filter(Question.question.ilike('%{}%'.format(search))).all()
+        if(len(selection) == 0):
+            abort(404)
         current_questions = paginate_questions(request, selection)
         return jsonify({
             "success": True,
@@ -213,7 +218,6 @@ def create_app(test_config=None):
             filters.append(Question.category == category['id'])
 
         questions = Question.query.filter(*filters).all()
-
         if len(questions) == 0:
             abort(404)
 

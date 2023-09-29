@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
@@ -35,6 +36,15 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(len(data['categories']), 6)
         self.assertEqual(data['categories']['1'], 'Science')
 
+    @patch.object(Category, 'query')
+    def test_error_retrieve_categories(self, mock_category):
+        mock_category.query.all.return_value = []
+        res = self.client().get('/categories')
+        data = json.loads(res.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['error'], 404)
+
     def test_retrieve_paginated_questions(self):
         res = self.client().get('/questions?page=1')
         data = json.loads(res.data)
@@ -44,17 +54,41 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['total_questions'], 19)
         self.assertEqual(len(data['categories']), 6)
 
+    def test_error_retrieve_paginated_questions(self):
+        res = self.client().get('/questions?page=1000')
+        data = json.loads(res.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['error'], 404)
+
+
     def test_retrieve_questions_by_category(self):
         res = self.client().get('/categories/1/questions')
         data = json.loads(res.data)
         self.assertEqual(data['success'], True)
         self.assertEqual(len(data['questions']), 3)
 
+    def test_error_retrieve_questions_by_category(self):
+        res = self.client().get('/categories/100/questions')
+        data = json.loads(res.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['error'], 404)
+
     def test_search_questions(self):
         res = self.client().post('/questions', json={'searchTerm': 'title'})
         data = json.loads(res.data)
         self.assertEqual(data['success'], True)
         self.assertEqual(len(data['questions']), 2)
+
+    @patch.object(Question, 'query')
+    def test_error_search_questions(self, mock_question):
+        mock_question.query.order_by.return_value.filter.return_value.all.return_value = []
+        res = self.client().post('/questions', json={'searchTerm': 'notfound'})
+        data = res.get_json()
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['error'], 404)
 
     # def test_create_question(self):
     #     res = self.client().post('/questions', json={
@@ -79,9 +113,9 @@ class TriviaTestCase(unittest.TestCase):
     # TEST: In the "Play" tab, after a user selects "All" or a category,
     # one question at a time is displayed, the user is allowed to answer
     # and shown whether they were correct or not.
-    def test_play_quize(self):
+    def test_play_quiz(self):
         res = self.client().post('/quizzes', json={
-            'previous_question': [1, 2, 3],
+            'previous_questions': [1, 2, 3],
             'quiz_category': {'type': 'Science', 'id': 1}
         })
         data = json.loads(res.data)
@@ -90,6 +124,15 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['question']['category'], 1)
         self.assertNotIn(data['question']['id'], [1, 2, 3])
 
+    def test_error_play_quiz(self):
+        res = self.client().post('/quizzes', json={
+            'previous_questions': list(range(1, 100)),
+            'quiz_category': {'type': 'Science', 'id': 1}
+        })
+        data = json.loads(res.data)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['error'], 404)
 
     def test_404_sent_requesting_beyond_valid_page(self):
         res = self.client().get('/questions?page=1000')
